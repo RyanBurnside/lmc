@@ -3,6 +3,8 @@
 
 (in-package #:lmc)
 
+;; TODO get rid of this global crap and make LMC jails as objects
+
 (defparameter *mailboxes* (make-array 100 :initial-element 0))
 (defparameter *inbox* '())  ; FIFO BASKET OF SLIPS
 (defparameter *outbox* '()) ; FIFO BASKET OF SLIPS
