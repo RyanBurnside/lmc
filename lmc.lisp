@@ -3,27 +3,36 @@
 
 (in-package #:lmc)
 
-;; TODO get rid of this global crap and make LMC jails as objects
+;; TODO get rid of this global crap make the LMC contained
 
 (defparameter *mailboxes* (make-array 100 :initial-element 0))
-(defparameter *inbox* '())  ; FIFO BASKET OF SLIPS
-(defparameter *outbox* '()) ; FIFO BASKET OF SLIPS
-
+(defparameter *inbox* '())
+(defparameter *outbox* '())
 (defparameter *calculator* 0)
 (defparameter *instruction-counter* 0)
 (defparameter *negative-flag* nil)
 (defparameter *finished* nil)
 
+(defun reset ()
+  (setq *mailboxes* (make-array 100 :initial-element 0))
+  (setq *inbox* '())
+  (setq *outbox* '())
+  (setq *calculator* 0)
+  (setq *instruction-counter* 0)
+  (setq *negative-flag* nil)
+  (setq *finished* nil))
+
+(reset)
+
 (defun mailbox-from-opcode (opcode)
   "Given an opcode aka 560 returns mailbox 60."
-  (assert (<= 0 opcode 99))
   (mod opcode 100))
 
 (defun opcodep (num)
   "Determines if the opcode is legal."
   (or (zerop num)
       (<= 100 num 899)
-      (member '(910 902))))
+      (member num '(901 902))))
 
 (defun do-opcode (num)
   "Performs an action given an instruction.
@@ -42,9 +51,12 @@ In the form of OXX. Steps 4 and 5 in the instructions."
           ((<= 600 num 699) (b mailbox))
           ((<= 700 num 799) (bz mailbox))
           ((<= 800 num 899) (bp mailbox))
-          ((= 910 num) (red))
-          ((= 902 num) (prt))))
-      (format t "Bad opcode: ~a. Ignored." num)))
+          ((= num 901) (red))
+          ((= num 902) (prt))))
+      (progn
+        (format t "Bad opcode: ~a. Halting!." num)
+        (setf *finished* t))))
+
 
 (defun set-mailbox-f (mailbox value)
   "Setter for the *mailboxes* array."
@@ -54,7 +66,13 @@ In the form of OXX. Steps 4 and 5 in the instructions."
   "Getter for the *mailboxes* array."
   (aref *mailboxes* mailbox))
 
+
+
 ;;; Opcode routines
+
+(defun button ()
+  "Starts the Computer - pokes little man in the ribs.."
+  (setf *finished* nil))
 
 (defun stop ()
   "Stops the Computer - the Little Man rests."
@@ -99,7 +117,7 @@ BP"
 to the number xx, thus effectively branching to mailbox xx. See the
  note for instruction BP"
   (when (zerop *calculator*)
-    (setf *instruction-count* mailbox)))w
+    (setf *instruction-count* mailbox)))
 
 (defun bp (mailbox)
   "IF the calculator value is positive, THEN set the instruction
@@ -112,11 +130,32 @@ to the number xx, thus effectively branching to mailbox xx. See the
   (setf *calculator* (pop *inbox*)))
 
 (defun prt ()
-  (setf *outbox*
-        (reverse (cons *calculator* (reverse *outbox*)))))
+  (setf *outbox* (reverse (cons *calculator* (reverse *outbox*)))))
 
 (defun main ()
-  (while (not *finished*)
-         ;; Goto mailbox with instruction counter
-         (let ((mailbox-value (get-mailbox *instruction-counter*)))
-           (do-opcode mailbox-value))))
+  (loop :until *finished*
+        :do (do-opcode (get-mailbox *instruction-counter*))))
+
+(defun load-boxes (start ops)
+  "Given a starting index loads all ops in sequentially."
+  (loop :for i :from start
+        :for op :in ops
+        :do (setf (aref *mailboxes* i) op)))
+
+(defun pretty-print-boxes ()
+  (loop :with line
+        :for i :below (length *mailboxes*) :by 10
+        :do (setf line (coerce (subseq *mailboxes* i (+ i 9)) 'list))
+            (format t "~{~4d~}~%" line)))
+
+(defun sample-program ()
+  (reset)
+  ;; We put 2 ops to be added in the inbox (rather than in boxes)
+  (setf *inbox* `(100 200))
+  ;; Enter the operations into the boxes
+  (load-boxes 0 `(901 306 901 106 902 000))
+  (pretty-print-boxes)
+  ;; Run the main program
+  (main)
+  ;; verify that the sum is correct
+  (print *outbox*))
