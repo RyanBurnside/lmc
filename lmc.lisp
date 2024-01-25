@@ -30,9 +30,8 @@
 
 (defun opcodep (num)
   "Determines if the opcode is legal."
-  (or (zerop num)
-      (<= 100 num 899)
-      (member num '(901 902))))
+  (or (<= 100 num 899)
+      (member num '(0 901 902))))
 
 (defun do-opcode (num)
   "Performs an action given an instruction.
@@ -66,8 +65,6 @@ In the form of OXX. Steps 4 and 5 in the instructions."
   "Getter for the *mailboxes* array."
   (aref *mailboxes* mailbox))
 
-
-
 ;;; Opcode routines
 
 (defun button ()
@@ -90,10 +87,6 @@ In the form of OXX. Steps 4 and 5 in the instructions."
 (defun sto (mailbox)
   "Stores the calculator value into mailbox xx."
   (set-mailbox-f mailbox *calculator*))
-
-(defun opcode-part (opcode)
-  "Returns the 100s version of an opcode."
-  (floor (/ opcode 100)))
 
 (defun sta (mailbox)
   "Stores the address portion of the calculator value (last 2 digits)
@@ -127,12 +120,15 @@ to the number xx, thus effectively branching to mailbox xx. See the
     (setf *instruction-count* mailbox)))
 
 (defun red ()
+  "Read"
   (setf *calculator* (pop *inbox*)))
 
 (defun prt ()
+  "Print"
   (setf *outbox* (reverse (cons *calculator* (reverse *outbox*)))))
 
 (defun main ()
+  "Driver that processes initial input state."
   (loop :until *finished*
         :do (do-opcode (get-mailbox *instruction-counter*))))
 
