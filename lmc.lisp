@@ -22,8 +22,6 @@
         *negative-flag* nil
         *finished* nil))
 
-(reset)
-
 (defun mailbox-from-opcode (opcode)
   "Given an opcode aka 560 returns mailbox 60."
   (mod opcode 100))
