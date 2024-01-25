@@ -14,13 +14,13 @@
 (defparameter *finished* nil)
 
 (defun reset ()
-  (setq *mailboxes* (make-array 100 :initial-element 0))
-  (setq *inbox* '())
-  (setq *outbox* '())
-  (setq *calculator* 0)
-  (setq *instruction-counter* 0)
-  (setq *negative-flag* nil)
-  (setq *finished* nil))
+  (setf *mailboxes* (make-array 100 :initial-element 0)
+        *inbox* '()
+        *outbox* '()
+        *calculator* 0
+        *instruction-counter* 0
+        *negative-flag* nil
+        *finished* nil))
 
 (reset)
 
@@ -124,7 +124,7 @@ to the number xx, thus effectively branching to mailbox xx. See the
   (setf *calculator* (pop *inbox*)))
 
 (defun prt ()
-  "Print"
+  "print calculator value to outbox."
   (setf *outbox* (reverse (cons *calculator* (reverse *outbox*)))))
 
 (defun main ()
@@ -139,6 +139,7 @@ to the number xx, thus effectively branching to mailbox xx. See the
         :do (setf (aref *mailboxes* i) op)))
 
 (defun pretty-print-boxes ()
+  "Print the boxes in a 10 x 10 table."
   (loop :with line
         :for i :below (length *mailboxes*) :by 10
         :do (setf line (coerce (subseq *mailboxes* i (+ i 9)) 'list))
